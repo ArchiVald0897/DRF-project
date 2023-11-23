@@ -1,9 +1,9 @@
-from rest_framework import serializers
-
 from urllib.parse import urlparse
 
+from rest_framework.serializers import ValidationError
 
-def validator_forbidden_urls(value):
-    parsed_url = urlparse(value)
-    if parsed_url.scheme == 'https' and parsed_url.netloc != 'www.youtube.com' or parsed_url.scheme == 'http':
-        raise serializers.ValidationError('Запрещено использовать ссылки на видео с этой платформы!')
+
+def forbidden_url(value):
+    url = urlparse(value)
+    if url.netloc != 'www.youtube.com' or url.scheme != 'https':
+        raise ValidationError('The link from the lesson should be from YouTube!')
