@@ -1,17 +1,8 @@
 from django.contrib import admin
 
-from courses.models import Course, Lesson
+from courses.models import Course, Lesson, Payments, Subscription
 
-
-@admin.register(Course)
-class CourseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'owner', 'description', 'preview')
-    search_fields = ('title', 'description', 'owner')
-    list_filter = ('owner', )
-
-
-@admin.register(Lesson)
-class LessonAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'course', 'owner', 'description', 'preview', 'video_url')
-    search_fields = ('title', 'description', 'owner')
-    list_filter = ('owner', 'course')
+admin.site.register(Course)
+admin.site.register(Lesson)
+admin.site.register(Payments)
+admin.site.register(Subscription)

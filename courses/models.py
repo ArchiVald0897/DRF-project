@@ -6,71 +6,73 @@ NULLABLE = {'blank': True, 'null': True}
 
 
 class Course(models.Model):
-    title = models.CharField(max_length=120, verbose_name='Название курса')
-    preview = models.ImageField(upload_to='course/', verbose_name='Превью курса', **NULLABLE)
-    description = models.TextField(verbose_name='Описание курса', **NULLABLE)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, **NULLABLE, verbose_name='Владелец курса')
-    price = models.IntegerField(verbose_name='Цена курса', default=10000)
+    title = models.CharField(max_length=200, verbose_name='Course title', **NULLABLE)
+    picture = models.ImageField(upload_to='course/', verbose_name='Course picture', **NULLABLE)
+    description = models.TextField(verbose_name='Course description', **NULLABLE)
+    price = models.IntegerField(verbose_name='Price')
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, **NULLABLE)
 
     def __str__(self):
-        return f'{self.title}'
+        return f'{self.title}.Price-{self.price}'
 
     class Meta:
-        verbose_name = 'Курс'
-        verbose_name_plural = 'Курсы'
+        verbose_name = 'Course'
+        verbose_name_plural = 'Courses'
 
 
 class Subscription(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', **NULLABLE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс', **NULLABLE)
-    subscription = models.BooleanField(default=False, verbose_name='Подписка на обновления')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='User', **NULLABLE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Course', **NULLABLE, related_name='subs')
+    subscription = models.BooleanField(default=False, verbose_name='Subscription')
 
     def __str__(self):
-        return f'{self.user} подписан на обновления курса {self.course}: {self.subscription}'
+        return f'{self.user} subscription on {self.course}: {self.subscription}'
 
     class Meta:
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
+        verbose_name = 'Subscription'
+        verbose_name_plural = 'Subscriptions'
 
 
 class Lesson(models.Model):
-    title = models.CharField(max_length=120, verbose_name='Название урока')
-    description = models.TextField(verbose_name='Описание урока', **NULLABLE)
-    preview = models.ImageField(upload_to='course/lesson', verbose_name='Превью урока', **NULLABLE)
-    video_url = models.URLField(max_length=300, verbose_name='Ссылка на видео', **NULLABLE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс', related_name='lessons')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, **NULLABLE, verbose_name='Владелец урока')
-    price = models.IntegerField(verbose_name='Цена урока', default=1000)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, **NULLABLE, related_name='lessons')
+
+    title = models.CharField(max_length=200, verbose_name='Lesson title', **NULLABLE)
+    description = models.TextField(verbose_name='Lesson description', **NULLABLE)
+    picture = models.ImageField(upload_to='course/lesson', **NULLABLE)
+    video_url = models.URLField(max_length=500, verbose_name='Lesson video URL', **NULLABLE)
+    price = models.IntegerField(verbose_name='Price')
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, **NULLABLE)
 
     def __str__(self):
-        return f'{self.title}'
+        return f'{self.pk} {self.course}: {self.title}: {self.owner}. Price-{self.price}'
 
     class Meta:
-        verbose_name = 'Урок'
-        verbose_name_plural = 'Уроки'
+        verbose_name = 'Lesson'
+        verbose_name_plural = 'Lessons'
 
 
 class Payments(models.Model):
     PAYMENT_CHOICES = (
-        ('наличные', 'Наличные'),
-        ('перевод на счет', 'Перевод на счет'),
+        ('cash', 'Cash'),
+        ('transfer', 'Transfer'),
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', **NULLABLE)
-    payment_date = models.DateField(auto_now_add=True, verbose_name='Дата оплаты', **NULLABLE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='User', **NULLABLE)
+    payment_date = models.DateTimeField(auto_now_add=True, **NULLABLE, verbose_name='Payment Date')
 
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Оплаченный курс', **NULLABLE)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, verbose_name='Оплаченный урок', **NULLABLE)
+    paid_course = models.ForeignKey(Course, on_delete=models.CASCADE, **NULLABLE, related_name='course')
+    paid_lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, **NULLABLE, related_name='lesson')
 
-    payment_amount = models.PositiveIntegerField(verbose_name='Сумма оплаты', **NULLABLE)
-    payment_method = models.CharField(max_length=30, choices=PAYMENT_CHOICES, verbose_name='Способ оплаты', **NULLABLE)
+    amount = models.IntegerField(verbose_name='Amount')
+    way_of_payment = models.CharField(max_length=10, choices=PAYMENT_CHOICES, verbose_name='Way of Payment')
 
-    is_paid = models.BooleanField(default=False, verbose_name='Статус оплаты')
+    is_paid = models.BooleanField(default=False, verbose_name='Status of payment')
 
     def __str__(self):
-        return f'{self.user} оплатил {self.course if self.course else self.lesson}: ' \
-               f'{self.payment_date} ({self.payment_method})'
+        return f'{self.user} paid for {self.paid_course if self.paid_course else self.paid_lesson}: {self.payment_date}'
 
     class Meta:
-        verbose_name = 'Платеж'
-        verbose_name_plural = 'Платежи'
+        verbose_name = 'Payment'
+        verbose_name_plural = 'Payments'
