@@ -1,27 +1,25 @@
 import stripe
 
-from config.settings import STRIPE_SECRET_KEY
+from config.settings import STRIPE_API_KEY
 
-stripe.api_key = STRIPE_SECRET_KEY
+stripe.api_key = STRIPE_API_KEY
 
 
 def get_link(obj):
-    """ Функция получения ссылки на оплату Курса или Урока """
-
-    if obj.course:
-        title = obj.course.title
-        description = obj.course.description
+    if obj.paid_course:
+        title = obj.paid_course.title
+        description = obj.paid_course.description
     else:
-        title = obj.lesson.title
-        description = obj.lesson.description
+        title = obj.paid_lesson.title
+        description = obj.paid_lesson.description
 
     product = stripe.Product.create(
         name=title,
         description=description
     )
     product_price = stripe.Price.create(
-        unit_amount=int(obj.payment_amount) * 100,
-        currency='rub',
+        unit_amount=obj.amount * 100,
+        currency='dkk',
         product=product['id']
     )
 
@@ -38,6 +36,5 @@ def get_link(obj):
             'payment_id': obj.id
         }
     )
-    obj.session_id = session.id
-    obj.save()
+
     return session['url']
